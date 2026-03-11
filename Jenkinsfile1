@@ -4,13 +4,13 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/KastroVKiran/Book-My-Show.git'
+                git branch: 'main', url: 'https://github.com/BhushaN625/Book-My-Show.git'
             }
         }
         
         stage('Build Docker') {
             steps {
-                sh 'docker build -t kastrov/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
+                sh 'docker build -t bhushankusale/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
             }
         }
         
@@ -19,7 +19,7 @@ pipeline {
                 sh ''' 
                 docker stop bms || true
                 docker rm bms || true
-                docker run -d --name bms -p 3000:3000 kastrov/bms:latest
+                docker run -d --name bms -p 3000:3000 bhushankusale/bms:latest
                 '''
             }
         }
