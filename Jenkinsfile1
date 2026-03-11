@@ -9,7 +9,7 @@ pipeline {
         stage('Build & Push to ECR') {
             steps {
                 script {
-                    sh 'docker build -t 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
+                    sh 'docker build -t 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest -f Dockerfile .'
                     sh 'docker push 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest'
                 }
             }
