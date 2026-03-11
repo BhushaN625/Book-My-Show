@@ -19,5 +19,6 @@ spec:
       containers:
       - name: bms-container
         image: 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
