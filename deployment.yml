@@ -20,4 +20,4 @@ spec:
       - name: bms-container
         image: 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 80
