@@ -1,99 +1,27 @@
 pipeline {
     agent any
     
-    tools {
-        jdk 'jdk17'
-        nodejs 'node23'
-    }
-    
-    environment {
-        SCANNER_HOME = tool 'sonar-scanner'
-        DOCKER_IMAGE = 'kastrov/bms:latest'
-    }
-    
     stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-        
-        stage('Checkout from Git') {
+        stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/KastroVKiran/Book-My-Show.git'
             }
         }
         
-        stage('SonarQube Analysis') {
+        stage('Build Docker') {
             steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh '$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BMS -Dsonar.projectKey=BMS'
-                }
+                sh 'docker build -t kastrov/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
             }
         }
         
-        stage('Quality Gate') {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
-                }
-            }
-        }
-        
-        stage('Install Dependencies') {
-            steps {
-                dir('bookmyshow-app') {
-                    sh '''
-                    rm -rf node_modules package-lock.json
-                    npm install
-                    '''
-                }
-            }
-        }
-        
-        stage('OWASP FS Scan') {
-            steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
-        }
-        
-        stage('Trivy FS Scan') {
-            steps {
-                sh 'trivy fs . > trivyfs.txt'
-            }
-        }
-        
-        stage('Docker Build & Push') {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh "docker build --no-cache -t ${DOCKER_IMAGE} -f bookmyshow-app/Dockerfile bookmyshow-app"
-                        sh "docker push ${DOCKER_IMAGE}"
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy to Container') {
+        stage('Deploy') {
             steps {
                 sh ''' 
                 docker stop bms || true
                 docker rm bms || true
-                docker run -d --restart=always --name bms -p 3000:3000 ${DOCKER_IMAGE}
+                docker run -d --name bms -p 3000:3000 kastrov/bms:latest
                 '''
             }
         }
     }
-    
-    post {
-        always {
-            emailext attachLog: true,
-                subject: "Build ${currentBuild.result}: ${env.JOB_NAME}",
-                body: "Project: ${env.JOB_NAME}<br/>Build Number: ${env.BUILD_NUMBER}<br/>URL: ${env.BUILD_URL}",
-                to: 'kastrokiran@gmail.com',
-                attachmentsPattern: 'trivyfs.txt'
-        }
-    }
-}
 }
