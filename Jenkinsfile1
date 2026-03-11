@@ -27,9 +27,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-server') {
-                    sh ''' 
-                    $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BMS -Dsonar.projectKey=BMS
-                    '''
+                    sh '$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BMS -Dsonar.projectKey=BMS'
                 }
             }
         }
@@ -83,7 +81,6 @@ pipeline {
                 docker stop bms || true
                 docker rm bms || true
                 docker run -d --restart=always --name bms -p 3000:3000 ${DOCKER_IMAGE}
-                docker ps -a
                 '''
             }
         }
@@ -99,5 +96,4 @@ pipeline {
         }
     }
 }
-    }
 }
