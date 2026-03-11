@@ -1,23 +1,31 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout') {
             steps {
+                // Pulls the latest code from your repo
                 git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/BhushaN625/Book-My-Show.git'
             }
         }
+
         stage('Build & Push to ECR') {
-    steps {
-        script {
-            // Using '.' as context ensures all files are visible to Docker
-            sh 'docker build -t 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest -f Dockerfile .'
-            sh 'docker push 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest'
+            steps {
+                script {
+                    // Builds the image using the Dockerfile in the root directory
+                    sh 'docker build -t 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest -f Dockerfile .'
+                    // Pushes the new image to AWS ECR
+                    sh 'docker push 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest'
+                }
+            }
         }
-    }
-}
+
         stage('Deploy with Ansible') {
             steps {
-                sh 'ansible-playbook ansible-deploy.yml'
+                script {
+                    // Runs the Ansible playbook to restart the K8s deployment
+                    sh 'ansible-playbook ansible-deploy.yml'
+                }
             }
         }
     }
