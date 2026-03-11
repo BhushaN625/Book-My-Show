@@ -1,33 +1,22 @@
 pipeline {
     agent any
-    
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/BhushaN625/Book-My-Show.git'
             }
         }
-        
-        stage('Build & Push Docker') {
+        stage('Build & Push to ECR') {
             steps {
-                // Now that the plugin is installed, this will work!
-                withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                    sh 'docker build -t bhushankusale/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
-                    sh 'docker push bhushankusale/bms:latest'
+                script {
+                    sh 'docker build -t 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
+                    sh 'docker push 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest'
                 }
             }
         }
-        
-        stage('Deploy to EKS') {
+        stage('Deploy with Ansible') {
             steps {
-                withEnv(['KUBECONFIG=/var/lib/jenkins/.kube/config']) {
-                    sh '''
-                    echo "Deploying to EKS..."
-                    kubectl apply -f deployment.yml
-                    kubectl apply -f service.yml
-                    kubectl rollout status deployment/bms-app
-                    '''
-                }
+                sh 'ansible-playbook ansible-deploy.yml'
             }
         }
     }
