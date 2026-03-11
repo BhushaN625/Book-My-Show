@@ -1,9 +1,12 @@
 ---
-- name: Deploy to EKS using kubectl
+- name: Deploy BookMyShow App to Kubernetes
   hosts: localhost
+  connection: local
   tasks:
-    - name: Apply deployment and service
-      shell: |
-        kubectl apply -f deployment.yml
-        kubectl apply -f service.yml
-        kubectl rollout status deployment/bms-app
+    - name: Restart Kubernetes Deployment
+      shell: kubectl rollout restart deployment bms-app
+      register: deploy_result
+
+    - name: Show deployment status
+      debug:
+        var: deploy_result.stdout
