@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/BhushaN625/Book-My-Show.git'
+            }
+        }
+        stage('Docker Build') {
+            steps {
+                // This builds your image and tags it
+                sh 'docker build -t bhushan625/bms:latest ./bookmyshow-app'
+            }
+        }
+        stage('Deploy to EKS') {
+            steps {
+                // This tells Kubernetes to run your app
+                sh 'kubectl apply -f deployment.yml'
+                sh 'kubectl apply -f service.yml'
+            }
+        }
+    }
+}
