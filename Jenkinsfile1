@@ -4,23 +4,36 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/BhushaN625/Book-My-Show.git'
+                // Ensure your GitHub credentials ID is set to 'github-creds'
+                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/BhushaN625/Book-My-Show.git'
             }
         }
         
-        stage('Build Docker') {
+        stage('Build & Push Docker') {
             steps {
-                sh 'docker build -t bhushankusale/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
+                script {
+                    // Uses the 'docker' credentials ID we created earlier
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh 'docker build -t bhushankusale/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app'
+                        sh 'docker push bhushankusale/bms:latest'
+                    }
+                }
             }
         }
         
-        stage('Deploy') {
+        stage('Deploy to EKS') {
             steps {
-                sh ''' 
-                docker stop bms || true
-                docker rm bms || true
-                docker run -d --name bms -p 3000:3000 bhushankusale/bms:latest
-                '''
+                // Ensures Jenkins uses your local EKS configuration
+                withEnv(['KUBECONFIG=/var/lib/jenkins/.kube/config']) {
+                    sh '''
+                    echo "Deploying to EKS Cluster..."
+                    kubectl apply -f deployment.yml
+                    kubectl apply -f service.yml
+                    
+                    # Verify the deployment roll-out
+                    kubectl rollout status deployment/bms-app
+                    '''
+                }
             }
         }
     }
