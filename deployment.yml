@@ -14,8 +14,10 @@ spec:
       labels:
         app: bms
     spec:
+      imagePullSecrets:
+      - name: ecr-secret  # <--- ADD THIS SECTION
       containers:
       - name: bms-container
         image: 372714115180.dkr.ecr.ap-south-1.amazonaws.com/bms:latest
         ports:
-        - containerPort: 3000  # Replace with the port your app runs on
+        - containerPort: 3000
